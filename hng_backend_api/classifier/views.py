@@ -52,23 +52,39 @@ def get_fun_fact(number: int) -> str:
     
     except requests.exceptions.RequestException as e:
         return f"Fun fact service is unavailable. Error: {str(e)}"
+#defined number properties to handle negative integers
+def number_properties(n):
+    properties = []
+    if n > 0:
+        if is_armstrong(n):
+            properties.append("armstrong")
+    if n % 2 == 0:
+        properties.append("even")
+    else:
+        properties.append("odd")
+    return properties
+
 @api_view(["GET"])
 def classify_number(request):
     number = request.GET.get("number")
+    #reversed the conditional statement so it can catch the negative numbers
+    if number:
+        number = int(number)
+        # properties = ["armstrong"] if is_armstrong(number) else []
+        # properties.append("odd" if number % 2 != 0 else "even")
+        properties = number_properties(number)#called the function
+
+        return Response({
+            "number": number,
+            "is_prime": is_prime(number),
+            "is_perfect": is_perfect(number),
+            "properties": properties,
+            # "digit_sum": sum(int(d) for d in str(number)),
+            "digit_sum": sum(int(d) for d in str(abs(number))), # Fix for negative numbers
+            "fun_fact": get_fun_fact(number),
+        }, status=status.HTTP_200_OK)
+    
 
     # Validate input
-    if not number or not number.isdigit():
+    else:
         return Response({"number": "alphabet", "error": True}, status=status.HTTP_400_BAD_REQUEST)
-
-    number = int(number)
-    properties = ["armstrong"] if is_armstrong(number) else []
-    properties.append("odd" if number % 2 != 0 else "even")
-
-    return Response({
-        "number": number,
-        "is_prime": is_prime(number),
-        "is_perfect": is_perfect(number),
-        "properties": properties,
-        "digit_sum": sum(int(d) for d in str(number)),
-        "fun_fact": get_fun_fact(number),
-    }, status=status.HTTP_200_OK)
